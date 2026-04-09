@@ -18,6 +18,14 @@ services:
         fromDatabase:
           name: consenthub-postgres
           property: connectionString
+      - key: API_SITE_KEYS
+        value: "bootstrap-key-change-me|bootstrap.local|ingest,read,export,shops"
+      - key: ADMIN_EMAILS
+        value: "admin@example.com"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: METRICS_BEARER_TOKEN
+        generateValue: true
       - key: ALLOW_LEGACY_API_KEYS
         value: "false"
       - key: REQUIRE_SHOP_ONBOARDING
@@ -45,12 +53,22 @@ services:
         fromDatabase:
           name: consenthub-postgres
           property: connectionString
+      - key: API_SITE_KEYS
+        value: "bootstrap-key-change-me|bootstrap.local|ingest,read,export,shops"
+      - key: ADMIN_EMAILS
+        value: "admin@example.com"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: METRICS_BEARER_TOKEN
+        generateValue: true
       - key: ALLOW_LEGACY_API_KEYS
         value: "false"
       - key: REQUIRE_SHOP_ONBOARDING
         value: "true"
       - key: ALLOW_ONBOARDING_EMAIL_DOMAIN_BYPASS
         value: "false"
+      - key: METRICS_ENABLED
+        value: "true"
 
 databases:
   - name: consenthub-postgres
