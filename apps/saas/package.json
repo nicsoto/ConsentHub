@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "USE_IN_MEMORY_STORE=true node --test tests/*.test.js",
+    "test": "NODE_ENV=test USE_IN_MEMORY_STORE=true node --test --test-concurrency=1 tests/*.test.js",
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev"
