@@ -5,15 +5,36 @@
   "description": "ConsentHub SaaS MVP API",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "dev": "APP_ROLE=web node --watch src/server.js",
+    "dev:worker": "APP_ROLE=worker node --watch src/worker.js",
+    "start": "APP_ROLE=web node src/server.js",
+    "start:web": "APP_ROLE=web node src/server.js",
+    "start:worker": "APP_ROLE=worker node src/worker.js",
     "test": "NODE_ENV=test USE_IN_MEMORY_STORE=true API_KEYS=dev-key-change-me ADMIN_EMAILS=admin@consenthub.local RESEND_API_KEY= EMAIL_FROM= node --test --test-concurrency=1 tests/*.test.js",
+    "smoke:roles": "node scripts/smoke-roles.js",
+    "smoke:observability": "node scripts/smoke-observability.js",
+    "smoke:all": "node --test tests/config-env.test.js && npm run smoke:roles && npm run smoke:observability",
+    "validate:prometheus": "sh scripts/validate-prometheus-rules.sh",
+    "verify:observability": "npm run validate:prometheus && NODE_ENV=test USE_IN_MEMORY_STORE=true node --test tests/metrics.test.js tests/rate-limit.test.js tests/config-env.test.js && npm run smoke:roles",
+    "verify:auth-enterprise": "NODE_ENV=test USE_IN_MEMORY_STORE=true node --test tests/auth-session.test.js tests/config-env.test.js tests/auth-csrf.test.js tests/auth-db-scoped-key.test.js",
+    "verify:prod-env": "node scripts/check-production-env.js",
+    "perf:budget": "node scripts/perf-budget.js",
+    "dev:observability": "sh scripts/dev-observability.sh",
+    "db:backup": "sh scripts/db-backup.sh",
+    "db:prune": "sh scripts/db-prune-backups.sh",
+    "db:verify-backup": "sh scripts/db-verify-backup.sh",
+    "db:security-policy": "sh scripts/backup-security-policy.sh",
+    "db:restore": "sh scripts/db-restore.sh",
+    "db:drill": "sh scripts/db-drill.sh",
+    "db:cross-restore": "sh scripts/db-cross-env-restore.sh",
+    "db:offsite-cloud-smoke": "sh scripts/db-offsite-cloud-smoke.sh",
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "dependencies": {
     "@prisma/client": "6.6.0",
