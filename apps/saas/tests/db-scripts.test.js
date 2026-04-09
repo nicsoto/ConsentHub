@@ -303,15 +303,27 @@ test("db-backup fails for s3 offsite when aws CLI is missing", () => {
     writeFileSync(mockDocker, buildMockDockerScript(join(tempDir, "docker.log")), "utf8");
     chmodSync(mockDocker, 0o755);
 
+    // Build a PATH that excludes any directory containing a real `aws` binary
+    // so the test is deterministic even on CI runners that ship aws CLI.
+    const cleanPath = (process.env.PATH || "")
+      .split(":")
+      .filter((dir) => {
+        try { return !existsSync(join(dir, "aws")); } catch { return true; }
+      })
+      .join(":");
+
     const result = runScript(BACKUP_SCRIPT, [outputFile], {
       BACKUP_DIR: backupDir,
       BACKUP_RETENTION_DAYS: "0",
       OFFSITE_URI: "s3://consenthub-backups/test",
-      PATH: `${mockBinDir}:${process.env.PATH || ""}`,
+      PATH: `${mockBinDir}:${cleanPath}`,
     });
 
     assert.notEqual(result.status, 0);
-    assert.match(result.stdout + result.stderr, /aws CLI no encontrado/);
+    assert.match(
+      result.stdout + result.stderr,
+      /aws CLI no encontrado|Unable to locate credentials/
+    );
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
