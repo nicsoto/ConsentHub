@@ -1514,6 +1514,7 @@ function normalizeBillingStatus(value) {
   const status = String(value || "").toLowerCase();
   const allowed = [
     "active",
+    "inactive",
     "trialing",
     "past_due",
     "canceled",
@@ -1591,6 +1592,17 @@ async function upsertSiteBilling(site, billingMeta = {}) {
     },
     () => {
       const next = formatBillingMeta(billingMeta);
+      let shop = memory.shops.find((row) => row.site === cleanSite);
+      if (!shop) {
+        shop = {
+          id: `shop_${memory.shops.length + 1}`,
+          site: cleanSite,
+          country: "CL",
+          retentionDays: 90,
+          createdAt: new Date(Date.now()).toISOString(),
+        };
+        memory.shops.push(shop);
+      }
       memory.billingBySite[cleanSite] = next;
       return { site: cleanSite, ...next };
     }
@@ -1643,7 +1655,7 @@ async function findShopByStripeCustomerId(stripeCustomerId) {
       if (!site) {
         return null;
       }
-      return memory.shops.find((s) => s.site === site) || null;
+      return memory.shops.find((s) => s.site === site) || { site };
     }
   );
 }
@@ -1668,7 +1680,7 @@ async function findShopByStripeSubscriptionId(stripeSubscriptionId) {
       if (!site) {
         return null;
       }
-      return memory.shops.find((s) => s.site === site) || null;
+      return memory.shops.find((s) => s.site === site) || { site };
     }
   );
 }
@@ -1771,7 +1783,7 @@ async function addEvent(event) {
 
       const newEvent = {
         id: `evt_${memory.events.length + 1}`,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(Date.now()).toISOString(),
         shopId: shop.id,
         site: event.site,
         category: event.category,

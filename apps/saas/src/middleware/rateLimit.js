@@ -6,14 +6,20 @@ setInterval(() => {
 }, 5 * 60 * 1000).unref();
 
 function createRateLimit(options = {}) {
-  const windowMs = Number(options.windowMs || 60_000);
-  const max = Number(options.max || 120);
+  const windowMsResolver = typeof options.windowMs === "function"
+    ? options.windowMs
+    : () => Number(options.windowMs || 60_000);
+  const maxResolver = typeof options.max === "function"
+    ? options.max
+    : () => Number(options.max || 120);
   const keyPrefix = String(options.keyPrefix || "global").trim();
   const keyResolver = typeof options.keyResolver === "function"
     ? options.keyResolver
     : (req) => req.ip || req.connection?.remoteAddress || "unknown";
 
   return async function rateLimit(req, res, next) {
+    const windowMs = Number(windowMsResolver(req) || 60_000);
+    const max = Number(maxResolver(req) || 120);
     const identity = String(keyResolver(req) || "unknown");
     const bucketKey = `${keyPrefix}:${identity}`;
 

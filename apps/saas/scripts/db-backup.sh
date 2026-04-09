@@ -7,8 +7,11 @@ cd "$ROOT_DIR"
 BACKUP_DIR="${BACKUP_DIR:-$ROOT_DIR/ops/backups}"
 DB_NAME="${DB_NAME:-consenthub}"
 DB_USER="${DB_USER:-postgres}"
-TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-OUTPUT_FILE="${1:-$BACKUP_DIR/consenthub-${DB_NAME}-${TIMESTAMP}.dump}"
+OUTPUT_FILE="${1:-}"
+if [ -z "$OUTPUT_FILE" ]; then
+  TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+  OUTPUT_FILE="$BACKUP_DIR/consenthub-${DB_NAME}-${TIMESTAMP}.dump"
+fi
 CHECKSUM_FILE="${OUTPUT_FILE}.sha256"
 BACKUP_ENCRYPTION_PASSPHRASE="${BACKUP_ENCRYPTION_PASSPHRASE:-}"
 BACKUP_ENCRYPTION_KEY_ID="${BACKUP_ENCRYPTION_KEY_ID:-}"
@@ -35,6 +38,17 @@ validate_bool "$REQUIRE_ENCRYPTED_OFFSITE" "REQUIRE_ENCRYPTED_OFFSITE"
 if [ -n "$OFFSITE_URI" ] && [ "$REQUIRE_ENCRYPTED_OFFSITE" = "true" ] && [ -z "$BACKUP_ENCRYPTION_PASSPHRASE" ]; then
   log "OFFSITE_URI configurado: define BACKUP_ENCRYPTION_PASSPHRASE o desactiva REQUIRE_ENCRYPTED_OFFSITE"
   exit 1
+fi
+
+if [ -n "$OFFSITE_URI" ]; then
+  case "$OFFSITE_URI" in
+    s3://*)
+      if ! command -v aws >/dev/null 2>&1; then
+        log "aws CLI no encontrado en PATH (requerido para OFFSITE_URI=s3://...)"
+        exit 1
+      fi
+      ;;
+  esac
 fi
 
 if [ "$STRICT_BACKUP_SECRETS" = "true" ]; then
@@ -101,11 +115,6 @@ log "generando checksum SHA256 en ${CHECKSUM_FILE}"
 if [ -n "$OFFSITE_URI" ]; then
   case "$OFFSITE_URI" in
     s3://*)
-      if ! command -v aws >/dev/null 2>&1; then
-        log "aws CLI no encontrado en PATH (requerido para OFFSITE_URI=s3://...)"
-        exit 1
-      fi
-
       log "subiendo backup y checksum a ${OFFSITE_URI}"
       aws s3 cp "$OUTPUT_FILE" "${OFFSITE_URI%/}/$(basename "$OUTPUT_FILE")"
       aws s3 cp "$CHECKSUM_FILE" "${OFFSITE_URI%/}/$(basename "$CHECKSUM_FILE")"
@@ -119,6 +128,6 @@ if [ -n "$OFFSITE_URI" ]; then
   esac
 fi
 
-"$ROOT_DIR/scripts/db-prune-backups.sh"
+bash "$ROOT_DIR/scripts/db-prune-backups.sh"
 
 log "ok: backup generado"

@@ -59,7 +59,7 @@ log "generando checksum SHA256 de backup de drill"
   sha256sum "$(basename "$BACKUP_FILE")" > "$(basename "$CHECKSUM_FILE")"
 )
 
-"$ROOT_DIR/scripts/db-verify-backup.sh" "$BACKUP_FILE"
+bash "$ROOT_DIR/scripts/db-verify-backup.sh" "$BACKUP_FILE"
 
 DRILL_SOURCE_FILE="$BACKUP_FILE"
 if [[ "$BACKUP_FILE" == *.enc ]]; then

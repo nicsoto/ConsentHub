@@ -193,9 +193,10 @@ test("GET /auth/sso accepts valid JWT header and downscopes claims", async () =>
     assert.ok(sessionCookieLine, "Session cookie should be set on JWT SSO login");
 
     const cookieValue = sessionCookieLine.split(";")[0].split("=")[1];
-    const decoded = Buffer.from(cookieValue, "base64url").toString("utf8");
-    const [jsonPart] = decoded.split(".");
-    const payload = JSON.parse(jsonPart);
+    const decodedCookie = decodeURIComponent(cookieValue);
+    const [version, encodedPayload] = decodedCookie.split("|");
+    assert.equal(version, "v2");
+    const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
     assert.equal(payload.role, "analyst");
     assert.deepEqual(payload.sites, ["tenant-a.local"]);
   } finally {

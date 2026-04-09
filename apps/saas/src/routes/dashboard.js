@@ -45,8 +45,8 @@ const router = express.Router();
 router.use(ensureCsrfCookie);
 
 const auditLogsRateLimit = createRateLimit({
-  windowMs: env.auditLogsRateLimitWindowMs,
-  max: env.auditLogsRateLimitMax,
+  windowMs: () => env.auditLogsRateLimitWindowMs,
+  max: () => env.auditLogsRateLimitMax,
   keyPrefix: "dashboard:audit-logs",
   keyResolver: (req) => {
     const actor = String(req.dashboardUser?.email || "").trim().toLowerCase();
@@ -682,9 +682,31 @@ function renderDashboard(
 }
 
 router.get("/dashboard", requireDashboardSession, requireDashboardPermission("dashboard.view"), async (req, res) => {
+  const filters = buildFilterParams(req.query || {});
   const flash = String(req.query?.flash || "").trim();
-  const target = flash ? `/dashboard-v2?flash=${encodeURIComponent(flash)}` : "/dashboard-v2";
-  return res.redirect(target);
+
+  try {
+    const snapshot = await loadDashboardSnapshot(filters);
+    return res.status(200).send(renderDashboard(
+      snapshot.stats,
+      snapshot.actions,
+      snapshot.categories,
+      snapshot.shopsWithUsage.filter((shop) => hasSiteAccess(req.dashboardUser, shop.site)),
+      snapshot.credentialsBySite,
+      snapshot.atRiskCount,
+      snapshot.billingAlerts.filter((alert) => hasSiteAccess(req.dashboardUser, alert.site)),
+      snapshot.incidents.filter((incident) => hasSiteAccess(req.dashboardUser, incident.site)),
+      snapshot.mttr,
+      snapshot.recentEvents,
+      req.dashboardUser.email,
+      req.csrfToken,
+      filters,
+      flash
+    ));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("No se pudo cargar dashboard");
+  }
 });
 
 router.get("/dashboard-v2", requireDashboardSession, requireDashboardPermission("dashboard.view"), async (_req, res) => {
@@ -1099,8 +1121,6 @@ router.post(
 );
 
 router.post("/dashboard/retention", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   const site = String(req.body?.site || "").trim();
   const retentionDays = toPositiveInt(req.body?.retentionDays || 0, 0);
 
@@ -1127,8 +1147,6 @@ router.post("/dashboard/retention", requireDashboardSession, requireCsrf, async 
 });
 
 router.post("/dashboard/retention/run", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   if (!hasPermission(req.dashboardUser, "dashboard.retention.write")) {
     return res.redirect("/dashboard?flash=No+tienes+permiso+para+retencion");
   }
@@ -1147,8 +1165,6 @@ router.post("/dashboard/retention/run", requireDashboardSession, requireCsrf, as
 });
 
 router.post("/dashboard/billing-alerts/:id/resolve", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   const alertId = String(req.params?.id || "").trim();
 
   if (!hasPermission(req.dashboardUser, "dashboard.billing_alerts.write")) {
@@ -1176,8 +1192,6 @@ router.post("/dashboard/billing-alerts/:id/resolve", requireDashboardSession, re
 });
 
 router.post("/dashboard/billing-alerts/escalate", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   if (!hasPermission(req.dashboardUser, "dashboard.billing_alerts.write")) {
     return res.redirect("/dashboard?flash=No+tienes+permiso+para+billing");
   }
@@ -1195,8 +1209,6 @@ router.post("/dashboard/billing-alerts/escalate", requireDashboardSession, requi
 });
 
 router.post("/dashboard/api-credentials/create", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   const site = String(req.body?.site || "").trim().toLowerCase();
   const profile = String(req.body?.profile || "ingest").trim().toLowerCase();
   const scopes = profileToScopes(profile);
@@ -1239,8 +1251,6 @@ router.post("/dashboard/api-credentials/create", requireDashboardSession, requir
 });
 
 router.post("/dashboard/api-credentials/:id/revoke", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   const credentialId = String(req.params?.id || "").trim();
 
   if (!hasPermission(req.dashboardUser, "dashboard.credentials.write")) {
@@ -1267,8 +1277,6 @@ router.post("/dashboard/api-credentials/:id/revoke", requireDashboardSession, re
 });
 
 router.post("/dashboard/api-credentials/regenerate-ingest", requireDashboardSession, requireCsrf, async (req, res) => {
-  return res.redirect("/dashboard-v2?flash=Dashboard+legacy+deprecado.+Usa+Dashboard+V2");
-
   const site = String(req.body?.site || "").trim().toLowerCase();
 
   if (!hasPermission(req.dashboardUser, "dashboard.credentials.write")) {

@@ -50,7 +50,7 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-"$ROOT_DIR/scripts/db-verify-backup.sh" "$INPUT_FILE"
+bash "$ROOT_DIR/scripts/db-verify-backup.sh" "$INPUT_FILE"
 
 RESTORE_SOURCE_FILE="$INPUT_FILE"
 if [[ "$INPUT_FILE" == *.enc ]]; then

@@ -112,6 +112,13 @@ billingWebhookRouter.post(
             stripeCustomerId: session.customer || "",
             stripeSubscriptionId: session.subscription || "",
           });
+        } else if (site && plan === "free") {
+          await upsertSiteBilling(site, {
+            plan: "free",
+            billingStatus: "inactive",
+            stripeCustomerId: session.customer || "",
+            stripeSubscriptionId: session.subscription || "",
+          });
         }
       }
 
