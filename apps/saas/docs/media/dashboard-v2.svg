@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-label="ConsentHub Dashboard V2 preview">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" fill="url(#bg)"/>
+  <rect x="40" y="28" width="1120" height="66" rx="12" fill="#1f2937"/>
+  <text x="72" y="70" fill="#e5e7eb" font-family="Segoe UI, Arial" font-size="28" font-weight="700">ConsentHub Dashboard V2</text>
+  <rect x="40" y="120" width="740" height="520" rx="16" fill="#111827" stroke="#334155"/>
+  <rect x="810" y="120" width="350" height="250" rx="16" fill="#111827" stroke="#334155"/>
+  <rect x="810" y="390" width="350" height="250" rx="16" fill="#111827" stroke="#334155"/>
+  <text x="74" y="162" fill="#93c5fd" font-family="Segoe UI, Arial" font-size="20">Usage and consent trends</text>
+  <text x="835" y="162" fill="#93c5fd" font-family="Segoe UI, Arial" font-size="20">Billing alerts</text>
+  <text x="835" y="432" fill="#93c5fd" font-family="Segoe UI, Arial" font-size="20">Top stores</text>
+  <rect x="70" y="190" width="680" height="1" fill="#334155"/>
+  <rect x="70" y="230" width="110" height="300" rx="8" fill="#0ea5e9" opacity="0.85"/>
+  <rect x="210" y="280" width="110" height="250" rx="8" fill="#22c55e" opacity="0.85"/>
+  <rect x="350" y="330" width="110" height="200" rx="8" fill="#f59e0b" opacity="0.9"/>
+  <rect x="490" y="250" width="110" height="280" rx="8" fill="#a78bfa" opacity="0.85"/>
+  <rect x="630" y="300" width="110" height="230" rx="8" fill="#ef4444" opacity="0.85"/>
+  <text x="72" y="612" fill="#94a3b8" font-family="Segoe UI, Arial" font-size="18">Example preview image for repository presentation.</text>
+</svg>

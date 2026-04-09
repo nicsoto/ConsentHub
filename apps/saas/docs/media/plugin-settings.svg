@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-label="Plugin settings preview">
+  <rect width="1200" height="700" fill="#f8fafc"/>
+  <rect x="110" y="60" width="980" height="580" rx="16" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="150" y="120" fill="#0f172a" font-family="Segoe UI, Arial" font-size="32" font-weight="700">WordPress Plugin Settings</text>
+  <text x="150" y="160" fill="#475569" font-family="Segoe UI, Arial" font-size="20">ConsentHub connection panel</text>
+  <text x="150" y="230" fill="#1e293b" font-family="Segoe UI, Arial" font-size="20">API Base URL</text>
+  <rect x="150" y="245" width="900" height="46" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="170" y="275" fill="#334155" font-family="Consolas, monospace" font-size="18">https://api.your-domain.com/consent-events</text>
+  <text x="150" y="340" fill="#1e293b" font-family="Segoe UI, Arial" font-size="20">Site Identifier</text>
+  <rect x="150" y="355" width="900" height="46" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="170" y="385" fill="#334155" font-family="Consolas, monospace" font-size="18">store.your-domain.com</text>
+  <text x="150" y="450" fill="#1e293b" font-family="Segoe UI, Arial" font-size="20">Ingest API Key</text>
+  <rect x="150" y="465" width="900" height="46" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="170" y="495" fill="#334155" font-family="Consolas, monospace" font-size="18">ch_ing_********************************</text>
+  <rect x="150" y="545" width="260" height="54" rx="10" fill="#0f766e"/>
+  <text x="196" y="579" fill="#ffffff" font-family="Segoe UI, Arial" font-size="22" font-weight="700">Save Settings</text>
+</svg>
