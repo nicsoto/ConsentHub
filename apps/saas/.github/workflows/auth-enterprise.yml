@@ -1,0 +1,44 @@
+name: Auth Enterprise
+
+on:
+  push:
+    paths:
+      - "src/routes/auth.js"
+      - "src/config/env.js"
+      - "src/services/session.js"
+      - "tests/auth-*.test.js"
+      - "tests/config-env.test.js"
+      - "package.json"
+      - ".github/workflows/auth-enterprise.yml"
+  pull_request:
+    paths:
+      - "src/routes/auth.js"
+      - "src/config/env.js"
+      - "src/services/session.js"
+      - "tests/auth-*.test.js"
+      - "tests/config-env.test.js"
+      - "package.json"
+      - ".github/workflows/auth-enterprise.yml"
+  workflow_dispatch:
+
+jobs:
+  verify-auth-enterprise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify enterprise auth suite
+        run: npm run verify:auth-enterprise

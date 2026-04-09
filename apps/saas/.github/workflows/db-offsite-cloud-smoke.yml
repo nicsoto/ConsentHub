@@ -1,0 +1,71 @@
+name: db-offsite-cloud-smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 5"
+
+jobs:
+  offsite-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        env:
+          OFFSITE_SMOKE_URI: ${{ secrets.OFFSITE_SMOKE_URI }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+          BACKUP_ENCRYPTION_KEY_ID: ${{ secrets.BACKUP_ENCRYPTION_KEY_ID }}
+        run: |
+          [ -n "$OFFSITE_SMOKE_URI" ] || { echo "missing secret: OFFSITE_SMOKE_URI"; exit 1; }
+          [ -n "$AWS_REGION" ] || { echo "missing secret: AWS_REGION"; exit 1; }
+          [ -n "$AWS_ACCESS_KEY_ID" ] || { echo "missing secret: AWS_ACCESS_KEY_ID"; exit 1; }
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || { echo "missing secret: AWS_SECRET_ACCESS_KEY"; exit 1; }
+          [ -n "$BACKUP_ENCRYPTION_PASSPHRASE" ] || { echo "missing secret: BACKUP_ENCRYPTION_PASSPHRASE"; exit 1; }
+          [ -n "$BACKUP_ENCRYPTION_KEY_ID" ] || { echo "missing secret: BACKUP_ENCRYPTION_KEY_ID"; exit 1; }
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Start source postgres service
+        run: docker compose up -d postgres
+
+      - name: Wait for source postgres readiness
+        run: |
+          for i in $(seq 1 40); do
+            if docker compose exec -T postgres pg_isready -U postgres -d consenthub >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "postgres readiness timeout"
+          exit 1
+
+      - name: Run offsite cloud smoke
+        env:
+          OFFSITE_SMOKE_URI: ${{ secrets.OFFSITE_SMOKE_URI }}
+          OFFSITE_SMOKE_CLEANUP: "true"
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+          BACKUP_ENCRYPTION_KEY_ID: ${{ secrets.BACKUP_ENCRYPTION_KEY_ID }}
+          STRICT_BACKUP_SECRETS: "true"
+          REQUIRE_ENCRYPTED_OFFSITE: "true"
+        run: bash ./scripts/db-offsite-cloud-smoke.sh
+
+      - name: Dump service logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200 postgres
+
+      - name: Stop source stack
+        if: always()
+        run: docker compose down -v

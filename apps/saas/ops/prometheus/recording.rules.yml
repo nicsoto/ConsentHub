@@ -1,0 +1,31 @@
+groups:
+  - name: consenthub-saas-recording
+    rules:
+      - record: consenthub:http_requests:rate5m
+        expr: |
+          sum(rate(consenthub_http_requests_total[5m]))
+
+      - record: consenthub:http_5xx_requests:rate5m
+        expr: |
+          sum(rate(consenthub_http_requests_total{status=~"5.."}[5m]))
+
+      - record: consenthub:http_5xx_ratio:rate5m
+        expr: |
+          consenthub:http_5xx_requests:rate5m
+          /
+          clamp_min(consenthub:http_requests:rate5m, 0.001)
+
+      - record: consenthub:dashboard_rate_limit_rejections:rate5m
+        expr: |
+          sum(rate(consenthub_rate_limit_rejections_total{keyPrefix="dashboard:audit-logs"}[5m]))
+
+      - record: consenthub:readyz_503:rate5m
+        expr: |
+          sum(rate(consenthub_http_requests_total{route="/readyz",status="503"}[5m]))
+
+      - record: consenthub:http_latency_p95_ms:5m
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(consenthub_http_request_duration_ms_bucket[5m]))
+          )

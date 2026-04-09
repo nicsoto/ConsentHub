@@ -1,0 +1,61 @@
+name: performance-budget
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * 1"
+
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start API in background
+        env:
+          NODE_ENV: test
+          USE_IN_MEMORY_STORE: "true"
+          APP_ROLE: web
+          PORT: "8787"
+          API_KEYS: perf-test-key
+          ADMIN_EMAILS: admin@consenthub.local
+          READINESS_CHECK_STRIPE: "false"
+        run: |
+          nohup node src/server.js > perf-server.log 2>&1 &
+          echo $! > perf-server.pid
+
+      - name: Run performance budget check
+        env:
+          PERF_BASE_URL: http://127.0.0.1:8787
+          PERF_SCENARIOS_JSON: >-
+            [{"method":"GET","path":"/livez"},{"method":"GET","path":"/readyz"},{"method":"POST","path":"/consent-events","expectedStatus":201,"headers":{"x-api-key":"perf-test-key"},"body":{"site":"perf.local","category":"all","action":"accept_all","country":"CL"}},{"method":"GET","path":"/consent-events?site=perf.local","expectedStatus":200,"headers":{"x-api-key":"perf-test-key"}},{"method":"GET","path":"/shops","expectedStatus":200,"headers":{"x-api-key":"perf-test-key"}},{"method":"GET","path":"/consent-events/export.csv?site=perf.local","expectedStatus":402,"headers":{"x-api-key":"perf-test-key"}}]
+          PERF_SCENARIO_BUDGETS_JSON: >-
+            [{"method":"GET","path":"/livez","p95Ms":220,"errorRate":0},{"method":"GET","path":"/readyz","p95Ms":260,"errorRate":0},{"method":"POST","path":"/consent-events","p95Ms":520,"errorRate":0.01},{"method":"GET","path":"/consent-events?site=perf.local","p95Ms":420,"errorRate":0.01},{"method":"GET","path":"/shops","p95Ms":420,"errorRate":0.01},{"method":"GET","path":"/consent-events/export.csv?site=perf.local","p95Ms":460,"errorRate":0}]
+          PERF_REQUESTS_TOTAL: "480"
+          PERF_CONCURRENCY: "24"
+          PERF_P95_MS_BUDGET: "350"
+          PERF_ERROR_RATE_BUDGET: "0.01"
+        run: npm run perf:budget
+
+      - name: Dump server logs on failure
+        if: failure()
+        run: cat perf-server.log || true
+
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f perf-server.pid ]; then
+            kill "$(cat perf-server.pid)" || true
+          fi

@@ -1,0 +1,58 @@
+name: db-cross-env-restore
+
+on:
+  schedule:
+    - cron: "0 4 * * 3"
+  workflow_dispatch:
+
+jobs:
+  cross-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start source postgres service
+        run: docker compose up -d postgres
+
+      - name: Wait for source postgres readiness
+        run: |
+          for i in $(seq 1 40); do
+            if docker compose exec -T postgres pg_isready -U postgres -d consenthub >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "postgres readiness timeout"
+          exit 1
+
+      - name: Run cross-env restore check (encrypted + offsite local)
+        env:
+          BACKUP_ENCRYPTION_PASSPHRASE: ci-cross-restore-passphrase
+          OFFSITE_URI: ops/backups/offsite
+          TARGET_DB_PASSWORD: postgres
+        run: bash ./scripts/db-cross-env-restore.sh
+
+      - name: Upload backup artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-cross-env-restore-artifacts
+          path: |
+            ops/backups/crossenv-*.dump
+            ops/backups/crossenv-*.dump.enc
+            ops/backups/crossenv-*.sha256
+            ops/backups/offsite/**
+          if-no-files-found: warn
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          docker compose logs --no-color --tail=200 postgres || true
+          docker ps -a || true
+
+      - name: Stop source stack
+        if: always()
+        run: docker compose down -v

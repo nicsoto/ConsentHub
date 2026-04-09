@@ -1,0 +1,40 @@
+name: backup-security-policy
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/backup-security-policy.sh"
+      - "scripts/db-backup.sh"
+      - "tests/db-scripts.test.js"
+      - "package.json"
+      - ".github/workflows/backup-security-policy.yml"
+  pull_request:
+    paths:
+      - "scripts/backup-security-policy.sh"
+      - "scripts/db-backup.sh"
+      - "tests/db-scripts.test.js"
+      - "package.json"
+      - ".github/workflows/backup-security-policy.yml"
+
+jobs:
+  validate-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate backup secret policy
+        env:
+          STRICT_BACKUP_SECRETS: "true"
+          REQUIRE_ENCRYPTED_OFFSITE: "true"
+          BACKUP_ENCRYPTION_PASSPHRASE: "ci-demo-passphrase-123"
+          BACKUP_ENCRYPTION_KEY_ID: "ci-key-rotation-v1"
+          BACKUP_ENCRYPTION_KEY_ROTATED_AT: "2026-04-01T00:00:00Z"
+          BACKUP_KEY_MAX_AGE_DAYS: "90"
+          OFFSITE_URI: "s3://consenthub-policy-check/mock"
+        run: bash ./scripts/backup-security-policy.sh

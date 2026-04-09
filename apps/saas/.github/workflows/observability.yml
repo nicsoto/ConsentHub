@@ -1,0 +1,64 @@
+name: observability
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run observability verification
+        env:
+          NODE_ENV: test
+          USE_IN_MEMORY_STORE: "true"
+        run: npm run verify:observability
+
+  integration-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start observability stack
+        run: docker compose up -d postgres prometheus
+
+      - name: Run observability smoke
+        env:
+          NODE_ENV: development
+        run: npm run smoke:observability
+
+      - name: Dump service logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v

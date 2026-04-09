@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ConsentHub Dashboard V2</title>
+    <link rel="stylesheet" href="/dashboard-v2/assets/styles.css" />
+  </head>
+  <body>
+    <div class="bg-glow bg-glow-a"></div>
+    <div class="bg-glow bg-glow-b"></div>
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">ConsentHub</p>
+        <h1>Dashboard V2</h1>
+      </div>
+      <nav>
+        <a href="/auth/logout">Salir</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <section class="card filters">
+        <h2>Filtros</h2>
+        <form id="filters-form">
+          <label>
+            Sitio
+            <input type="text" name="site" placeholder="ej: perf.local" />
+          </label>
+          <label>
+            Dias
+            <input type="number" min="1" max="365" name="days" value="30" />
+          </label>
+          <label>
+            Limite
+            <input type="number" min="10" max="300" name="limit" value="80" />
+          </label>
+          <button type="submit">Actualizar</button>
+        </form>
+      </section>
+
+      <section class="grid kpis" id="kpis"></section>
+
+      <section class="card split">
+        <div>
+          <h2>Acciones de consentimiento</h2>
+          <div id="actions-bars" class="bars"></div>
+        </div>
+        <div>
+          <h2>Categorias top</h2>
+          <div id="categories-bars" class="bars"></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Top sitios por uso 30d</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Sitio</th>
+                <th>Plan</th>
+                <th>Billing</th>
+                <th>Retention</th>
+                <th>Uso 30d</th>
+              </tr>
+            </thead>
+            <tbody id="shops-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card split">
+        <div>
+          <h2>Retencion</h2>
+          <form id="retention-form" class="inline-form">
+            <label>
+              Sitio
+              <select id="retention-site" name="site"></select>
+            </label>
+            <label>
+              Dias
+              <input type="number" min="1" max="3650" name="retentionDays" value="180" />
+            </label>
+            <button type="submit">Actualizar retencion</button>
+          </form>
+          <button id="retention-run" class="secondary">Ejecutar limpieza ahora</button>
+        </div>
+
+        <div>
+          <h2>Billing alerts</h2>
+          <button id="alerts-escalate" class="secondary">Escalar alertas abiertas</button>
+          <div class="table-wrap compact">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sitio</th>
+                  <th>Severidad</th>
+                  <th>Mensaje</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="alerts-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Credenciales API</h2>
+        <form id="create-credential-form" class="inline-form">
+          <label>
+            Sitio
+            <select id="credential-site" name="site"></select>
+          </label>
+          <label>
+            Perfil
+            <select name="profile">
+              <option value="ingest">ingest</option>
+              <option value="read_export">read_export</option>
+              <option value="full">full</option>
+            </select>
+          </label>
+          <button type="submit">Crear credencial</button>
+          <button type="button" id="regenerate-ingest" class="secondary">Regenerar ingest</button>
+        </form>
+
+        <div class="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>Sitio</th>
+                <th>Scopes</th>
+                <th>Estado</th>
+                <th>Creada</th>
+                <th>Ultimo uso</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="credentials-body"></tbody>
+          </table>
+        </div>
+
+        <div id="secret-box" class="secret-box hidden"></div>
+      </section>
+
+      <section id="access-admin" class="card hidden">
+        <h2>Acceso enterprise (roles/sitios)</h2>
+        <form id="access-policy-form" class="inline-form">
+          <label>
+            Email
+            <input type="email" name="email" required placeholder="admin@empresa.com" />
+          </label>
+          <label>
+            Rol
+            <select name="role">
+              <option value="admin">admin</option>
+              <option value="operator">operator</option>
+              <option value="billing_manager">billing_manager</option>
+              <option value="analyst">analyst</option>
+            </select>
+          </label>
+          <label>
+            Sitios (coma)
+            <input type="text" name="sites" placeholder="site-a.local,site-b.local o *" />
+          </label>
+          <button type="submit">Guardar politica</button>
+        </form>
+
+        <div class="table-wrap compact">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Sitios</th>
+                <th>Actualizado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="access-policies-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Eventos recientes</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Sitio</th>
+                <th>Categoria</th>
+                <th>Accion</th>
+                <th>Pais</th>
+              </tr>
+            </thead>
+            <tbody id="events-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="status-box" class="status hidden" aria-live="polite"></section>
+    </main>
+
+    <script src="/dashboard-v2/assets/app.js" defer></script>
+  </body>
+</html>

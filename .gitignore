@@ -1,0 +1,18 @@
+# Node
+node_modules/
+.npm/
+
+# Environment
+.env
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+.vscode/
+
+# Local generated dumps/reports
+CODIGO_*.md
+codigo_status.txt
+

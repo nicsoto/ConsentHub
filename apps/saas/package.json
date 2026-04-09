@@ -1,0 +1,29 @@
+{
+  "name": "consenthub-saas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ConsentHub SaaS MVP API",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "USE_IN_MEMORY_STORE=true node --test tests/**/*.test.js",
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "6.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "stripe": "^17.7.0"
+  },
+  "devDependencies": {
+    "prisma": "6.6.0",
+    "supertest": "^7.0.0"
+  }
+}

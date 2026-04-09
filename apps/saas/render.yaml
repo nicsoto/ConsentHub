@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: consenthub-web
+    runtime: node
+    rootDir: apps/saas
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm run db:migrate:deploy && APP_ROLE=web npm start
+    autoDeploy: true
+    healthCheckPath: /livez
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ROLE
+        value: web
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: consenthub-postgres
+          property: connectionString
+      - key: ALLOW_LEGACY_API_KEYS
+        value: "false"
+      - key: REQUIRE_SHOP_ONBOARDING
+        value: "true"
+      - key: ALLOW_ONBOARDING_EMAIL_DOMAIN_BYPASS
+        value: "false"
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: METRICS_ENABLED
+        value: "true"
+
+  - type: worker
+    name: consenthub-worker
+    runtime: node
+    rootDir: apps/saas
+    buildCommand: npm install && npx prisma generate
+    startCommand: APP_ROLE=worker npm run start:worker
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ROLE
+        value: worker
+      - key: DATABASE_URL
+        fromDatabase:
+          name: consenthub-postgres
+          property: connectionString
+      - key: ALLOW_LEGACY_API_KEYS
+        value: "false"
+      - key: REQUIRE_SHOP_ONBOARDING
+        value: "true"
+      - key: ALLOW_ONBOARDING_EMAIL_DOMAIN_BYPASS
+        value: "false"
+
+databases:
+  - name: consenthub-postgres
+    plan: free
+    databaseName: consenthub
+    user: consenthub

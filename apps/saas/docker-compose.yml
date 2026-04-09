@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: consenthub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: consenthub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - consenthub_pg_data:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: consenthub-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./ops/prometheus/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/prometheus/recording.rules.yml:/etc/prometheus/rules/recording.rules.yml:ro
+      - ./ops/prometheus/alerts.rules.yml:/etc/prometheus/rules/alerts.rules.yml:ro
+      - consenthub_prometheus_data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: consenthub-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ops/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./ops/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./ops/grafana/consenthub-overview.dashboard.json:/var/lib/grafana/dashboards/consenthub-overview.dashboard.json:ro
+      - consenthub_grafana_data:/var/lib/grafana
+
+volumes:
+  consenthub_pg_data:
+  consenthub_prometheus_data:
+  consenthub_grafana_data:

@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ConsentEvent {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  site      String
+  category  String
+  action    String
+  country   String   @default("CL")
+  subjectId String?
+  shopId    String?
+  shop      Shop?    @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([site])
+  @@index([timestamp])
+  @@index([site, subjectId, timestamp])
+}
+
+model Shop {
+  id        String         @id @default(cuid())
+  site      String         @unique
+  country   String         @default("CL")
+  retentionDays Int        @default(90)
+  plan      String         @default("free")
+  billingStatus String     @default("free")
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  currentPeriodEnd DateTime?
+  gracePeriodEndsAt DateTime?
+  createdAt DateTime       @default(now())
+  events    ConsentEvent[]
+  apiCredentials ApiCredential[]
+
+  @@index([plan])
+  @@index([billingStatus])
+}
+
+model ApiCredential {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  site       String
+  scopes     String[]
+  status     String   @default("active")
+  lastUsedAt DateTime?
+  createdAt  DateTime @default(now())
+  shopId     String?
+  shop       Shop?    @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([site])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MagicLinkToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  usedAt    DateTime?
+
+  @@index([expiresAt])
+  @@index([usedAt])
+}
+
+model RateLimitBucket {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model BillingWebhookEvent {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String
+  processedAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@index([processedAt])
+}
+
+model BillingAlert {
+  id         String   @id @default(cuid())
+  site       String
+  type       String
+  severity   String   @default("warning")
+  message    String
+  rawEventId String?
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+  lastCriticalEmailAt DateTime?
+
+  @@index([site])
+  @@index([status])
+  @@index([createdAt])
+  @@index([lastCriticalEmailAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  actorEmail String
+  action     String
+  site       String?
+  requestId  String?
+  metadata   Json?
+
+  @@index([createdAt])
+  @@index([actorEmail])
+  @@index([action])
+  @@index([site])
+}
+
+model DashboardAccessPolicy {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      String   @default("admin")
+  sites     String[]
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([role])
+}

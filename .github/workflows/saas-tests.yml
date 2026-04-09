@@ -1,0 +1,35 @@
+name: saas-tests
+
+on:
+  push:
+    paths:
+      - "apps/saas/**"
+      - ".github/workflows/saas-tests.yml"
+  pull_request:
+    paths:
+      - "apps/saas/**"
+      - ".github/workflows/saas-tests.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/saas
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/saas/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test

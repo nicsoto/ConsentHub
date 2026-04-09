@@ -1,0 +1,46 @@
+groups:
+  - name: consenthub-saas
+    rules:
+      - alert: ConsentHubHigh5xxRate
+        expr: |
+          consenthub:http_5xx_ratio:rate5m > 0.03
+        for: 10m
+        labels:
+          severity: warning
+          service: consenthub-saas
+        annotations:
+          summary: "ConsentHub high 5xx rate"
+          description: "5xx ratio has been above 3% for 10m."
+
+      - alert: ConsentHubDashboardRateLimited
+        expr: |
+          consenthub:dashboard_rate_limit_rejections:rate5m > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          service: consenthub-saas
+        annotations:
+          summary: "ConsentHub dashboard endpoints are being rate-limited"
+          description: "Rate-limit rejections for dashboard audit/history endpoints are sustained above threshold."
+
+      - alert: ConsentHubReadyzUnavailable
+        expr: |
+          consenthub:readyz_503:rate5m > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: consenthub-saas
+        annotations:
+          summary: "ConsentHub readiness is failing"
+          description: "The /readyz endpoint has returned 503 for at least 5 minutes."
+
+      - alert: ConsentHubHighP95Latency
+        expr: |
+          consenthub:http_latency_p95_ms:5m > 800
+        for: 15m
+        labels:
+          severity: warning
+          service: consenthub-saas
+        annotations:
+          summary: "ConsentHub p95 latency is high"
+          description: "Global HTTP p95 latency is above 800ms for 15 minutes."

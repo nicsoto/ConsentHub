@@ -1,0 +1,66 @@
+name: db-drill
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  push:
+    paths:
+      - "scripts/db-backup.sh"
+      - "scripts/db-restore.sh"
+      - "scripts/db-drill.sh"
+      - "scripts/db-verify-backup.sh"
+      - "tests/db-scripts.test.js"
+      - ".github/workflows/db-drill.yml"
+  pull_request:
+    paths:
+      - "scripts/db-backup.sh"
+      - "scripts/db-restore.sh"
+      - "scripts/db-drill.sh"
+      - "scripts/db-verify-backup.sh"
+      - "tests/db-scripts.test.js"
+      - ".github/workflows/db-drill.yml"
+  workflow_dispatch:
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start postgres service
+        run: docker compose up -d postgres
+
+      - name: Wait for postgres readiness
+        run: |
+          for i in $(seq 1 40); do
+            if docker compose exec -T postgres pg_isready -U postgres -d consenthub >/dev/null 2>&1; then
+              echo "postgres ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "postgres readiness timeout"
+          exit 1
+
+      - name: Run backup/restore drill
+        run: bash ./scripts/db-drill.sh
+
+      - name: Upload drill backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-drill-backups
+          path: |
+            ops/backups/drill-*.dump
+            ops/backups/drill-*.dump.sha256
+          if-no-files-found: warn
+
+      - name: Dump service logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=200 postgres
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v
