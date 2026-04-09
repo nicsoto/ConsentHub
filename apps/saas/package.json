@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "NODE_ENV=test USE_IN_MEMORY_STORE=true node --test --test-concurrency=1 tests/*.test.js",
+    "test": "NODE_ENV=test USE_IN_MEMORY_STORE=true API_KEYS=dev-key-change-me ADMIN_EMAILS=admin@consenthub.local RESEND_API_KEY= EMAIL_FROM= node --test --test-concurrency=1 tests/*.test.js",
     "prisma:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev"
