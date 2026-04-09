@@ -15,6 +15,12 @@ Esta version crea una base funcional para desarrollo:
 - Backend con endpoints de health, listado y export CSV.
 - Rate limiting basico en ingesta (`POST /consent-events`): 120 requests por minuto por IP.
 
+## Higiene de repo
+
+- Los volcados locales de codigo (`CODIGO_*.md`) no se versionan.
+- `README.md` y documentacion operativa si se versionan.
+- Configuracion de despliegue y entorno productivo vive en `apps/saas/`.
+
 ## Requisitos
 
 - Node.js 20+
