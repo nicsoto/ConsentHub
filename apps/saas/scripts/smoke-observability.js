@@ -31,7 +31,7 @@ async function waitForText(url, retries = 25, delayMs = 400) {
   throw lastError || new Error(`Unable to reach ${url}`);
 }
 
-async function waitForPromQuery(query, retries = 30, delayMs = 1500) {
+async function waitForPromQuery(query, retries = 30, delayMs = 1500, allowEmpty = false) {
   let lastPayload = null;
 
   for (let attempt = 0; attempt < retries; attempt += 1) {
@@ -46,7 +46,7 @@ async function waitForPromQuery(query, retries = 30, delayMs = 1500) {
       if (res.status === 200 && payload.status === "success") {
         const data = payload.data || {};
         const result = Array.isArray(data.result) ? data.result : [];
-        if (result.length > 0) {
+        if (allowEmpty || result.length > 0) {
           return payload;
         }
       }
@@ -102,7 +102,8 @@ async function main() {
     await ensurePrometheusReady();
 
     await waitForPromQuery("consenthub:http_requests:rate5m");
-    await waitForPromQuery("consenthub:http_5xx_ratio:rate5m");
+    // This series can be empty when no 5xx traffic has occurred, which is still healthy.
+    await waitForPromQuery("consenthub:http_5xx_ratio:rate5m", 30, 1500, true);
     await waitForPromQuery("consenthub:http_latency_p95_ms:5m");
 
     console.log("[smoke] ok: metrics endpoint and Prometheus recording rules are wired");

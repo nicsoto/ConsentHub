@@ -17,19 +17,22 @@ fi
 
 log "validando reglas Prometheus con promtool"
 docker run --rm \
-  -v "$PWD/ops/prometheus:/rules:ro" \
+  --entrypoint promtool \
+  -v "$PWD/ops/prometheus:/etc/prometheus:ro" \
   "$PROM_IMAGE" \
-  promtool check rules /rules/recording.rules.yml /rules/alerts.rules.yml
+  check rules /etc/prometheus/recording.rules.yml /etc/prometheus/alerts.rules.yml
 
 log "validando config Prometheus (local/example)"
 docker run --rm \
-  -v "$PWD/ops/prometheus:/rules:ro" \
+  --entrypoint promtool \
+  -v "$PWD/ops/prometheus:/etc/prometheus:ro" \
   "$PROM_IMAGE" \
-  promtool check config /rules/prometheus.local.yml
+  check config /etc/prometheus/prometheus.local.yml
 
 docker run --rm \
-  -v "$PWD/ops/prometheus:/rules:ro" \
+  --entrypoint promtool \
+  -v "$PWD/ops/prometheus:/etc/prometheus:ro" \
   "$PROM_IMAGE" \
-  promtool check config /rules/prometheus.example.yml
+  check config /etc/prometheus/prometheus.example.yml
 
 log "ok: reglas y configuraciones validas"
