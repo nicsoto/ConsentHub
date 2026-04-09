@@ -8,7 +8,7 @@ If you run stores in LATAM/EU, you need proof of consent decisions, quick export
 
 ConsentHub gives you:
 
-- Consent event ingestion API with scoped credentials.
+- Server-to-server consent ingestion with scoped credentials.
 - Customer-facing portal for usage and credential management.
 - Billing-aware plan enforcement (limits, grace period, downgrade behavior).
 - Privacy endpoints for subject data access/export/deletion.
@@ -75,6 +75,8 @@ npm run dev
 
 ## Current Capabilities
 
+- WordPress plugin sends events through a server-side proxy flow.
+- No browser-exposed API key requirement in the default integration path.
 - Scoped API credentials stored hashed at rest.
 - Magic-link auth with CSRF-protected web actions.
 - Optional SSO bridge and native OIDC login.
@@ -96,32 +98,3 @@ npm run dev
 ## License
 
 Proprietary for now (update when distribution policy is finalized).
-
-1. Abre el sitio en frontend.
-2. Interactua con el banner.
-3. Verifica eventos:
-
-```bash
-curl -H 'x-api-key: dev-key-change-me' 'http://localhost:8787/consent-events?site=tu-dominio.local'
-```
-
-4. Export CSV:
-
-```bash
-curl -H 'x-api-key: dev-key-change-me' 'http://localhost:8787/consent-events/export.csv?site=tu-dominio.local'
-```
-
-Nota: los endpoints API de eventos y export usan API key solo por header `x-api-key`.
-
-## Siguientes hitos
-
-- Dashboard frontend separado (no SSR en string) para evolucion de UX.
-- Refinar capacidades enterprise: SSO/RBAC avanzado y multi-tenant admin.
-- Performance budgets por endpoint y pruebas de carga periodicas.
-- Expandir resiliencia de datos (retencion offsite/cifrado y drills de restauracion cruzada).
-
-Nota: gran parte del hardening operativo ya fue implementado en `apps/saas` (observabilidad, CI gates, runbooks, backup/restore/drill).
-
-## Nota legal
-
-ConsentHub facilita implementacion tecnica y buenas practicas. No constituye asesoria legal.
